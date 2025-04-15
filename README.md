@@ -2,6 +2,9 @@
 
 A decentralized NFT staking platform for Gully NFTs, allowing holders to stake their NFTs and earn rewards.
 
+<img width="853" alt="Screenshot 2025-04-15 at 16 06 21" src="https://github.com/user-attachments/assets/cc0d17db-ccb5-4005-9b8a-d1ea872143d8" />
+
+
 ## Overview
 
 vGully NFT Staking is a soft staking reward system that enables Gully NFT holders to:
