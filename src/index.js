@@ -1,10 +1,11 @@
 const axios = require('axios');
 
-// Get value from CLI: `node script.js 100000`
+// CLI usage: node script.js 100000 --nodryrun
 const totalValue = parseFloat(process.argv[2]);
+const isDryRun = !process.argv.includes('--nodryrun');
 
 if (isNaN(totalValue)) {
-  console.error('Usage: node script.js <total-value>');
+  console.error('Usage: node script.js <total-value> [--nodryrun]');
   process.exit(1);
 }
 
@@ -17,6 +18,12 @@ const ELEMENT_WEIGHTS = {
   Gold: 5,
 };
 
+// 🔁 Placeholder transfer function
+async function sendPayment(to, amount) {
+  // TODO: Implement real transfer logic here using algosdk, Nautilus SDK, etc.
+  console.log(`[TRANSFER] Sent ${amount.toFixed(6)} VOI to ${to}`);
+}
+
 async function fetchNFTData() {
   try {
     const response = await axios.get(API_URL);
@@ -24,6 +31,7 @@ async function fetchNFTData() {
 
     console.log(`Fetched ${tokens.length} tokens`);
     console.log(`\nTotal reward pool: ${totalValue} VOI`);
+    console.log(`Dry Run Mode: ${isDryRun ? 'ON' : 'OFF'}\n`);
 
     const holderMap = {};
 
@@ -54,15 +62,16 @@ async function fetchNFTData() {
       }
     }
 
-    // Compute total points
     const allPoints = Object.values(holderMap).reduce((sum, h) => sum + h.points, 0);
 
-    // Build payout report
     const report = Object.entries(holderMap).map(([owner, data]) => {
       const payout = allPoints > 0 ? (data.points / allPoints) * totalValue : 0;
 
-      // Placeholder for sending payout
-      console.log(`Would send ${payout.toFixed(6)} VOI to ${owner}`);
+      if (isDryRun) {
+        console.log(`[DRYRUN] Would send ${payout.toFixed(6)} VOI to ${owner}`);
+      } else {
+        sendPayment(owner, payout);
+      }
 
       return {
         owner,
@@ -73,7 +82,6 @@ async function fetchNFTData() {
       };
     });
 
-    // Sort by payout descending
     report.sort((a, b) => b.payout - a.payout);
 
     console.log('\n📤 Holder Reward Distribution (Top 10):');
