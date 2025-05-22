@@ -1,4 +1,9 @@
 const axios = require('axios');
+const algosdk = require('algosdk');
+const MNEMONIC = 'seed phrase here'; // Never commit this in production!
+const senderAccount = algosdk.mnemonicToSecretKey(MNEMONIC);
+// Voi Mainnet Algorand API (using AlgoNode as an example)
+const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.voi.nodely.dev', '');
 
 // CLI usage: node script.js 100000 --nodryrun
 const totalValue = parseFloat(process.argv[2]);
@@ -18,10 +23,27 @@ const ELEMENT_WEIGHTS = {
   Gold: 5,
 };
 
-// 🔁 Placeholder transfer function
-async function sendPayment(to, amount) {
-  // TODO: Implement real transfer logic here using algosdk, Nautilus SDK, etc.
-  console.log(`[TRANSFER] Sent ${amount.toFixed(6)} VOI to ${to}`);
+async function sendPayment(toAddress, amount) {
+  try {
+    const params = await algodClient.getTransactionParams().do();
+
+    const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      from: senderAccount.addr,
+      to: toAddress,
+      amount: algosdk.algosToMicroalgos(amount), // convert VOI to microVOI
+      suggestedParams: params,
+      note: new TextEncoder().encode(
+        `Drop ${amount} VOI for vGully holder rewards`
+      ),
+    });
+
+    const signedTxn = txn.signTxn(senderAccount.sk);
+    const { txId } = await algodClient.sendRawTransaction(signedTxn).do();
+
+    console.log(`[TRANSFER] Sent ${amount.toFixed(6)} VOI to ${toAddress} | TXID: ${txId}`);
+  } catch (error) {
+    console.error(`[ERROR] Failed to send ${amount} VOI to ${toAddress}:`, error.message);
+  }
 }
 
 async function fetchNFTData() {
